@@ -47,7 +47,8 @@ const getUsersById = (req, res) => {
 };
 
 const postUser = (req, res) => {
-  const { firstname, lastname, email, city, language, hashedPassword } = req.body;
+  const { firstname, lastname, email, city, language, hashedPassword } =
+    req.body;
 
   database
     .query(
@@ -65,7 +66,8 @@ const postUser = (req, res) => {
 
 const updateUser = (req, res) => {
   const id = parseInt(req.params.id);
-  const { firstname, lastname, email, city, language, hashedPassword } = req.body;
+  const { firstname, lastname, email, city, language, hashedPassword } =
+    req.body;
 
   database
     .query(
@@ -91,7 +93,7 @@ const deleteUser = (req, res) => {
   database
     .query("delete from users where id = ?", [id])
     .then(([result]) => {
-      if (result.affectedRows === o) {
+      if (result.affectedRows === 0) {
         res.status(404).send("Not Found");
       } else {
         res.sendStatus(204);
@@ -103,10 +105,32 @@ const deleteUser = (req, res) => {
     });
 };
 
+const getUserByEmailWithPasswordAndPassToNext = (req, res, next) => {
+  const { email } = req.body;
+  console.log(req.body);
+
+  database
+    .query("select * from users where email = ?", [email])
+    .then(([users]) => {
+      if (users[0] != null) {
+        req.user = users[0];
+
+        next();
+      } else {
+        res.sendStatus(401);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error retrieving data from database");
+    });
+};
+
 module.exports = {
   getUsers,
   getUsersById,
   postUser,
   updateUser,
   deleteUser,
+  getUserByEmailWithPasswordAndPassToNext,
 };
